@@ -1,0 +1,86 @@
+[
+  {
+    "ParameterKey" : "AmiDistro",
+    "ParameterValue" : "CentOS"
+  },
+  {
+    "ParameterKey" : "AmiId",
+    "ParameterValue" : "__AMI-ID__"
+  },
+  {
+    "ParameterKey" : "AppVolumeDevice",
+    "ParameterValue" : ""
+  },
+  {
+    "ParameterKey" : "AppVolumeMountPath",
+    "ParameterValue" : "/var/lib/jenkins"
+  },
+  {
+    "ParameterKey" : "AppVolumeSize",
+    "ParameterValue" : "1"
+  },
+  {
+    "ParameterKey" : "AppVolumeType",
+    "ParameterValue" : "gp2"
+  },
+  {
+    "ParameterKey" : "CfnBootstrapUtilsUrl",
+    "ParameterValue" : "https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz"
+  },
+  {
+    "ParameterKey" : "CfnEndpointUrl",
+    "ParameterValue" : "https://cloudformation.us-east-1.amazonaws.com"
+  },
+  {
+    "ParameterKey" : "InstanceRole",
+    "ParameterValue" : "__INSTANCROLE__"
+  },
+  {
+    "ParameterKey" : "InstanceType",
+    "ParameterValue" : "t2.micro"
+  },
+  {
+    "ParameterKey" : "JenkinsRepoKeyURL",
+    "ParameterValue" : "https://jenkins-ci.org/redhat/jenkins-ci.org.key"
+  },
+  {
+    "ParameterKey" : "JenkinsRepoURL",
+    "ParameterValue" : "http://pkg.jenkins.io/redhat"
+  },
+  {
+    "ParameterKey" : "KeyPairName",
+    "ParameterValue" : "__KPNAME__"
+  },
+  {
+    "ParameterKey" : "NoPublicIp",
+    "ParameterValue" : "false"
+  },
+  {
+    "ParameterKey" : "NoReboot",
+    "ParameterValue" : "true"
+  },
+  {
+    "ParameterKey" : "NoUpdates",
+    "ParameterValue" : "true"
+  },
+  {
+    "ParameterKey" : "ProvisionUser",
+    "ParameterValue" : "__PROVUSER__"
+  },
+  {
+    "ParameterKey" : "SecurityGroupIds",
+    "ParameterValue" : "__SGID__"
+  },
+  {
+    "ParameterKey" : "SubnetIds",
+    "ParameterValue" : "__SNID__"
+  },
+  {
+    "ParameterKey" : "SystemPrepBootstrapUrl",
+    "ParameterValue" : "https://s3.amazonaws.com/systemprep/BootStrapScripts/SystemPrep-Bootstrap--Linux.sh"
+  },
+  {
+    "ParameterKey" : "SystemPrepEnvironment",
+    "ParameterValue" : "false"
+  }
+]
