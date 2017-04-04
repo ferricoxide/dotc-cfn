@@ -401,16 +401,6 @@
         "AWS::CloudFormation::Init" : {
           "config" : {
             "files" : {
-              "/tmp/jenkins_cron" : {
-                "source" :  {
-                  "Fn::Join" : [ "", [
-                    { "Ref" : "BackupCronURL" }
-                  ]]
-                },
-                "mode" : "000400",
-                "owner" : "root",
-                "group" : "root"
-              },
               "/etc/cfn/cfn-hup.conf" : {
                 "content" : {
                   "Fn::Join" : ["", [
@@ -736,10 +726,21 @@
               "      systemctl start jenkins\n",
               "      \n",
               "      # Install Jenkins backup cron-job\n",
-              "      test -f /tmp/jenkins_cron && install -b -m 0600 -o ",
-                       "jenkins -g jenkins /tmp/jenkins_cron ",
-                       "/var/spool/cron/jenkins\n",
+              "      curl -skL ",
+                        { "Ref" : "BackupCronURL" },
+                        " -o /tmp/jenkins_cron || ",
+                        "error_exit 'Could not download cron config'\n",
+              "      install -b -m 0600 -o jenkins -g jenkins ",
+                       "/tmp/jenkins_cron /var/spool/cron/jenkins ||",
+                       "error_exit 'Could not inject cron config'\n",
+              "      echo jenkins >> /etc/cron.allow || ",
+                       "error_exit 'Could not add jenkins as an allowed cron-user'\n",
               "      systemctl restart crond\n",
+              "      \n",
+              "      # Temp-disable SELinux\n",
+              "      setenforce 1 || error_exit 'Could not change SEL-mode'\n",
+              "      \n",
+              "      # Signal Cfn that we're good\n",
               "      /opt/aws/bin/cfn-signal -e 0 --stack ",
                         { "Ref" : "AWS::StackName" },
                         " --resource CfnLaunchConfig --url ",
