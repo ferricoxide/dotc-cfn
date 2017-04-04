@@ -1,86 +1,122 @@
 [
   {
-    "ParameterKey" : "AmiDistro",
-    "ParameterValue" : "CentOS"
+    "ParameterKey" : "AmiId ",
+    "ParameterValue": "__AMIID__"
   },
   {
-    "ParameterKey" : "AmiId",
-    "ParameterValue" : "__AMI-ID__"
+    "ParameterKey" : "BackupBucket ",
+    "ParameterValue": "__BUCKETNAME__"
   },
   {
-    "ParameterKey" : "AppVolumeDevice",
-    "ParameterValue" : ""
+    "ParameterKey" : "BackupCronURL ",
+    "ParameterValue": "__CRONURL__"
   },
   {
-    "ParameterKey" : "AppVolumeMountPath",
-    "ParameterValue" : "/var/lib/jenkins"
+    "ParameterKey" : "BackupFolder ",
+    "ParameterValue": "__BUCKETFOLDER__"
   },
   {
-    "ParameterKey" : "AppVolumeSize",
-    "ParameterValue" : "1"
+    "ParameterKey" : "CfnEndpointUrl ",
+    "ParameterValue": "__CFNURL__"
   },
   {
-    "ParameterKey" : "AppVolumeType",
-    "ParameterValue" : "gp2"
+    "ParameterKey" : "DnsSuffix ",
+    "ParameterValue": "__DNSDOM__"
   },
   {
-    "ParameterKey" : "CfnBootstrapUtilsUrl",
-    "ParameterValue" : "https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz"
+    "ParameterKey" : "InstanceRole ",
+    "ParameterValue": "__INSTANCE__"
   },
   {
-    "ParameterKey" : "CfnEndpointUrl",
-    "ParameterValue" : "https://cloudformation.us-east-1.amazonaws.com"
+    "ParameterKey" : "KeyPairName ",
+    "ParameterValue": "__KPNAME__"
   },
   {
-    "ParameterKey" : "InstanceRole",
-    "ParameterValue" : "__INSTANCROLE__"
+    "ParameterKey" : "SecurityGroupIds ",
+    "ParameterValue": "__SGIDS__"
   },
   {
-    "ParameterKey" : "InstanceType",
-    "ParameterValue" : "t2.micro"
+    "ParameterKey" : "SubnetIds ",
+    "ParameterValue": "__SNIDS__"
   },
   {
-    "ParameterKey" : "JenkinsRepoKeyURL",
-    "ParameterValue" : "https://jenkins-ci.org/redhat/jenkins-ci.org.key"
+    "ParameterKey" : "AmiDistro ",
+    "ParameterValue": "CentOS"
   },
   {
-    "ParameterKey" : "JenkinsRepoURL",
-    "ParameterValue" : "http://pkg.jenkins.io/redhat"
+    "ParameterKey" : "AppVolumeDevice ",
+    "ParameterValue": ""
   },
   {
-    "ParameterKey" : "KeyPairName",
-    "ParameterValue" : "__KPNAME__"
+    "ParameterKey" : "AppVolumeMountPath ",
+    "ParameterValue": "/var/lib/jenkins"
   },
   {
-    "ParameterKey" : "NoPublicIp",
-    "ParameterValue" : "false"
+    "ParameterKey" : "AppVolumeSize ",
+    "ParameterValue": "1"
   },
   {
-    "ParameterKey" : "NoReboot",
-    "ParameterValue" : "true"
+    "ParameterKey" : "AppVolumeType ",
+    "ParameterValue": "gp2"
   },
   {
-    "ParameterKey" : "NoUpdates",
-    "ParameterValue" : "true"
+    "ParameterKey" : "CfnBootstrapUtilsUrl ",
+    "ParameterValue": "https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz"
   },
   {
-    "ParameterKey" : "ProvisionUser",
-    "ParameterValue" : "__PROVUSER__"
+    "ParameterKey" : "EpelRepo ",
+    "ParameterValue": "epel"
   },
   {
-    "ParameterKey" : "SecurityGroupIds",
-    "ParameterValue" : "__SGID__"
+    "ParameterKey" : "InstanceType ",
+    "ParameterValue": "t2.micro"
   },
   {
-    "ParameterKey" : "SubnetIds",
-    "ParameterValue" : "__SNID__"
+    "ParameterKey" : "JenkinsRepoKeyURL ",
+    "ParameterValue": "https://jenkins-ci.org/redhat/jenkins-ci.org.key"
   },
   {
-    "ParameterKey" : "SystemPrepBootstrapUrl",
-    "ParameterValue" : "https://s3.amazonaws.com/systemprep/BootStrapScripts/SystemPrep-Bootstrap--Linux.sh"
+    "ParameterKey" : "JenkinsRepoURL ",
+    "ParameterValue": "http://pkg.jenkins.io/redhat"
   },
   {
-    "ParameterKey" : "SystemPrepEnvironment",
-    "ParameterValue" : "false"
+    "ParameterKey" : "NoPublicIp ",
+    "ParameterValue": "false"
+  },
+  {
+    "ParameterKey" : "NoReboot ",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey" : "NoUpdates ",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey" : "PipIndexFips ",
+    "ParameterValue": "https://pypi.org/simple/"
+  },
+  {
+    "ParameterKey" : "PipRpm ",
+    "ParameterValue": "python2-pip"
+  },
+  {
+    "ParameterKey" : "ProvisionUser ",
+    "ParameterValue": "autojenk"
+  },
+  {
+    "ParameterKey" : "PyStache ",
+    "ParameterValue": "pystache"
+  },
+  {
+    "ParameterKey" : "ServerHostname ",
+    "ParameterValue": "jenkins-master"
+  },
+  {
+    "ParameterKey" : "SystemPrepBootstrapUrl ",
+    "ParameterValue": "https://s3.amazonaws.com/systemprep/BootStrapScripts/SystemPrep-Bootstrap--Linux.sh"
+  },
+  {
+    "ParameterKey" : "SystemPrepEnvironment ",
+    "ParameterValue": "false"
   }
 ]

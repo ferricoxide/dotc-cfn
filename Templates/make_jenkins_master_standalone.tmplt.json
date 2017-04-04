@@ -60,6 +60,11 @@
       "Type": "String",
       "AllowedPattern": "^[a-z][a-z0-9-]*$"
     },
+    "BackupCronURL": {
+      "Description": "URL to the Jenkins backup cron-file",
+      "Type": "String",
+      "AllowedPattern": "^$|^http://.*$|^https://.*$"
+    },
     "BackupFolder": {
       "Description": "Folder in S3 Bucket to host backups of Jenkins config-data",
       "Type": "String",
@@ -338,16 +343,17 @@
             "SubnetIds"
           ]
         },
-	{
+        {
           "Label": {
             "default": "S3 Resources"
           },
           "Parameters": [
-	    "BackupBucket",
-	    "BackupFolder"
-	  ]
-	},
-	{
+            "BackupBucket",
+            "BackupCronURL",
+            "BackupFolder"
+          ]
+        },
+        {
           "Label": {
             "default": "Miscellaneous Parameters"
           },
@@ -357,7 +363,7 @@
             "PipRpm",
             "PyStache"
           ]
-	},
+        },
         {
           "Label": {
             "default": "CloudFormation Configuration"
@@ -393,119 +399,115 @@
       "Type": "AWS::EC2::Instance",
       "Metadata" : {
         "AWS::CloudFormation::Init" : {
-	  "config" : {
-	    "files" : {
-	      "/tmp/jenkins_cron" : {
-		"source" : {
-		  "Fn::Join" : [ "", [
-		    "s3://",
-		    { "Ref" : "BackupBucket" },
-		    "/",
-		    { "Ref" : "BackupFolder" },
-		    "/SupportFiles/cron_jenkins"
-		  ]]
-		},
+          "config" : {
+            "files" : {
+              "/tmp/jenkins_cron" : {
+                "source" :  {
+                  "Fn::Join" : [ "", [
+                    { "Ref" : "BackupCronURL" }
+                  ]]
+                },
                 "mode" : "000400",
                 "owner" : "root",
                 "group" : "root"
-	      },
-	      "/etc/cfn/cfn-hup.conf" : {
-	        "content" : {
-		  "Fn::Join" : ["", [
-		    "[main]\n",
-		    "stack=", { "Ref" : "AWS::StackId" }, "\n",
-		    "region=", { "Ref" : "AWS::Region" }, "\n",
-		    {
-		      "Fn::If" : [
-		        "AssignInstanceRole", {
-			  "Fn::Join" : [ "", [
-			    "role=",
-			    { "Ref" : "InstanceRole" },
-			    "\n"
-			  ]]
-			},
-			""
-		      ]
-		    },
-		    {
-		      "Fn::If" : [
-		        "AssignInstanceRole", {
-			  "Fn::Join" : [ "", [
-			    "url=",
-			    { "Ref" : "CfnEndpointUrl" },
-			    "\n"
-			  ]]
-			},
-			""
-		      ]
-		    }
-		  ]]
-		},
+              },
+              "/etc/cfn/cfn-hup.conf" : {
+                "content" : {
+                  "Fn::Join" : ["", [
+                    "[main]\n",
+                    "stack=", { "Ref" : "AWS::StackId" }, "\n",
+                    "region=", { "Ref" : "AWS::Region" }, "\n",
+                    {
+                      "Fn::If" : [
+                        "AssignInstanceRole", {
+                          "Fn::Join" : [ "", [
+                            "role=",
+                            { "Ref" : "InstanceRole" },
+                            "\n"
+                          ]]
+                        },
+                        ""
+                      ]
+                    },
+                    {
+                      "Fn::If" : [
+                        "AssignInstanceRole", {
+                          "Fn::Join" : [ "", [
+                            "url=",
+                            { "Ref" : "CfnEndpointUrl" },
+                            "\n"
+                          ]]
+                        },
+                        ""
+                      ]
+                    }
+                  ]]
+                },
                 "mode" : "000400",
                 "owner" : "root",
                 "group" : "root"
-	      },
-	      "/etc/cfn/hooks.d/cfn-auto-reloader.conf" : {
-	        "content" : {
-		  "Fn::Join" : ["", [
-		    "[cfn-auto-reloader-hook]\n",
-		    "triggers=post.update\n",
-		    "path=Resources.CfnLaunchConfig.Metadata\n",
-		    "action=/opt/aws/bin/cfn-init -v -c update",
-		    " --stack ", { "Ref" : "AWS::StackName" },
-		    " --resource SystemPrepLaunchInstance",
-		    {
-		      "Fn::If" : [
-		        "AssignInstanceRole",
-			{
-			  "Fn::Join" : [ "", [
-			    " --role ",
-			    { "Ref" : "InstanceRole" }
-			  ]]
-			},
-			""
-		      ]
-		    },
-		    {
-		      "Fn::If" : [
-		        "UseCfnUrl",
-			{
-			  "Fn::Join" : [ "", [
-			    " --url ",
-			    { "Ref" : "CfnEndpointUrl" }
-			  ]]
-			},
-			""
-		      ]
-		    }
-		  ]]
-		},
+              },
+              "/etc/cfn/hooks.d/cfn-auto-reloader.conf" : {
+                "content" : {
+                  "Fn::Join" : ["", [
+                    "[cfn-auto-reloader-hook]\n",
+                    "triggers=post.update\n",
+                    "path=Resources.CfnLaunchConfig.Metadata\n",
+                    "action=/opt/aws/bin/cfn-init -v -c update",
+                    " --stack ", { "Ref" : "AWS::StackName" },
+                    " --resource CfnLaunchConfig",
+                    {
+                      "Fn::If" : [
+                        "AssignInstanceRole",
+                        {
+                          "Fn::Join" : [ "", [
+                            " --role ",
+                            { "Ref" : "InstanceRole" }
+                          ]]
+                        },
+                        ""
+                      ]
+                    },
+                    {
+                      "Fn::If" : [
+                        "UseCfnUrl",
+                        {
+                          "Fn::Join" : [ "", [
+                            " --url ",
+                            { "Ref" : "CfnEndpointUrl" }
+                          ]]
+                        },
+                        ""
+                      ]
+                    }
+                  ]]
+                },
                 "mode" : "000400",
                 "owner" : "root",
                 "group" : "root"
-	      }
-	    },
-	    "services" : {
-	      "sysvinit" : {
-	        "cfn-hup" : {
-		  "enabled" : "true",
-		  "ensureRunning" : "true",
-		  "files" : [
-		    "/etc/cfn/cfn-hup.conf",
-		    "/etc/cfn/hooks.d/cfn-auto-reloader.conf"
-		  ]
-		}
-	      }
-	    }
-	  },
-	  "install-updates" : {
-	    "commands" : {
-	      "10-install-updates" : {
-	        "command" : "yum update -y"
-	      }
-	    }
-	  }
-	}
+              }
+            },
+            "services" : {
+              "sysvinit" : {
+                "cfn-hup" : {
+                  "enabled" : "true",
+                  "ensureRunning" : "true",
+                  "files" : [
+                    "/etc/cfn/cfn-hup.conf",
+                    "/etc/cfn/hooks.d/cfn-auto-reloader.conf"
+                  ]
+                }
+              }
+            }
+          },
+          "install-updates" : {
+            "commands" : {
+              "10-install-updates" : {
+                "command" : "yum update -y"
+              }
+            }
+          }
+        }
       },
       "CreationPolicy": {
         "ResourceSignal": {
@@ -618,115 +620,131 @@
           "Fn::Base64" : {
             "Fn::Join" : [ "", [
               "#cloud-config\n",
-	      "\n",
+              "\n",
               "system_info:\n",
               "  default_user:\n",
               "    name: ",
-	        { "Ref" : "ProvisionUser" },
-	      "\n",
-	      {
-	        "Fn::If" :
-		[
-		  "CreateAppVolume",
-		  {
-		    "Fn::Join" : [ "", [
-		      "\n",
-	              "bootcmd:\n",
-		      "  - cloud-init-per instance mkfs-appvolume mkfs -t ext4 ",
-		      { "Ref" : "AppVolumeDevice" },
-		      "\n",
-		      "mounts:\n",
-		      "  - [ ",
-		        { "Ref" : "AppVolumeDevice" }, ", ",
-			{ "Ref" : "AppVolumeMountPath" },
-		      " ]\n"
-		    ]]
-		  },
-		  { "Ref" : "AWS::NoValue" }
-		]
+                { "Ref" : "ProvisionUser" },
+              "\n",
+              {
+                "Fn::If" :
+                [
+                  "CreateAppVolume",
+                  {
+                    "Fn::Join" : [ "", [
+                      "\n",
+                      "bootcmd:\n",
+                      "  - cloud-init-per instance mkfs-appvolume mkfs -t ext4 ",
+                      { "Ref" : "AppVolumeDevice" },
+                      "\n",
+                      "mounts:\n",
+                      "  - [ ",
+                        { "Ref" : "AppVolumeDevice" }, ", ",
+                        { "Ref" : "AppVolumeMountPath" },
+                      " ]\n"
+                    ]]
+                  },
+                  { "Ref" : "AWS::NoValue" }
+                ]
               },
-	      "\n",
-	      "hostname: ",
+              "\n",
+              "hostname: ",
                      { "Ref" : "ServerHostname" },
-	      "\n",
+              "\n",
               "fqdn: ",
                      { "Ref" : "ServerHostname" },
-	             ".",
+                     ".",
                      { "Ref" : "DnsSuffix" },
-	      "\n",
+              "\n",
               "manage_etc_hosts: true\n",
-	      "\n",
-	      "yum_repos:\n",
-	      "  jenkins:\n",
-	      "    name: Jenkins CI service-repository\n",
-	      "    baseurl: ",
-	        { "Ref" : "JenkinsRepoURL" },
-	      "\n",
-	      "    enabled: true\n",
-	      "    gpgkey: ",
-	        { "Ref" : "JenkinsRepoKeyURL" },
-	      "\n",
-	      "\n",
-	      "runcmd:\n",
-	      "  - |\n",
-	      "      \n",
-	      "      # Temp-disable SELinux\n",
-	      "      setenforce 0\n",
-	      "      \n",
-	      "      # Try to get firewalld ready for commands\n",
-	      "      firewall-offline-cmd --enabled\n",
-	      "      \n",
-	      "      # Add firewall exceptions\n",
-	      "      firewall-cmd --zone=public --add-port=80/tcp --permanent\n",
-	      "      firewall-cmd --zone=public --add-port=443/tcp --permanent\n",
-	      "      firewall-cmd --zone=public --add-port=8080/tcp --permanent\n",
-	      "      firewall-cmd --reload\n",
-	      "      \n",
-	      "      # Install missing RPMs\n",
-	      "      yum --enablerepo=",
+              "\n",
+              "yum_repos:\n",
+              "  jenkins:\n",
+              "    name: Jenkins CI service-repository\n",
+              "    baseurl: ",
+                { "Ref" : "JenkinsRepoURL" },
+              "\n",
+              "    enabled: true\n",
+              "    gpgkey: ",
+                { "Ref" : "JenkinsRepoKeyURL" },
+              "\n",
+              "\n",
+              "runcmd:\n",
+              "  - |\n",
+              "      \n",
+              "      # Helper function\n",
+              "      function error_exit {\n",
+              "         /opt/aws/bin/cfn-signal -e 1 --stack ",
+                           { "Ref" : "AWS::StackName" },
+                           " --resource CfnLaunchConfig\n",
+              "         exit 1\n",
+              "      }\n",
+              "      \n",
+              "      # Temp-disable SELinux\n",
+              "      setenforce 0 || error_exit 'Could not change SEL-mode'\n",
+              "      \n",
+              "      # Try to get firewalld ready for commands\n",
+              "      firewall-offline-cmd --enabled\n",
+              "      \n",
+              "      # Add firewall exceptions\n",
+              "      firewall-cmd --zone=public --add-port=80/tcp --permanent\n",
+              "      firewall-cmd --zone=public --add-port=443/tcp --permanent\n",
+              "      firewall-cmd --zone=public --add-port=8080/tcp --permanent\n",
+              "      firewall-cmd --reload\n",
+              "      \n",
+              "      # Install missing RPMs\n",
+              "      yum --enablerepo=",
                         { "Ref" : "EpelRepo" },
                         " install -y ",
                         { "Ref" : "PyStache" },
-			" ",
+                        " ",
                         { "Ref" : "PipRpm" },
-                        "\n",
-	      "      \n",
-	      "      # Initialize the Cfn subsystems\n",
+                        "|| error_exit 'Could not change install dependent RPMs.'\n",
+              "      \n",
+              "      # Initialize the Cfn subsystems\n",
               "      /opt/aws/bin/cfn-init -s ",
                         { "Ref" : "AWS::StackName" },
                                  " -r CfnLaunchConfig ",
                       " --region ",
                          { "Ref" : "AWS::Region" },
                          " && echo 'Successfully ran cfn-init'",
-                         " || echo 'Failed to run cfn-init' > /dev/stderr\n",
-	      "      \n",
-	      "      # Export cert bundle ENVs\n",
-	      "      export AWS_CA_BUNDLE=/etc/pki/tls/certs/ca-bundle.crt\n",
-	      "      export REQUESTS_CA_BUNDLE=/etc/pki/tls/certs/ca-bundle.crt\n",
-	      "      \n",
-	      "      # Do pip-stuff\n",
-	      "      pip install -i ",
+                         " || error_exit 'Failed to run cfn-init' > /dev/stderr\n",
+              "      \n",
+              "      # Export cert bundle ENVs\n",
+              "      export AWS_CA_BUNDLE=/etc/pki/tls/certs/ca-bundle.crt\n",
+              "      export REQUESTS_CA_BUNDLE=/etc/pki/tls/certs/ca-bundle.crt\n",
+              "      \n",
+              "      # Do pip-stuff\n",
+              "      pip install -i ",
                         { "Ref": "PipIndexFips" },
                         " --upgrade pip\n",
-	      "      \n",
-	      "      # Install Jenkins\n",
-	      "      yum install -y jenkins\n",
-	      "      \n",
-	      "      # Restore JENKINS_HOME content (if available)\n",
-	      "      echo \"Restoring Jenkins from S3\"\n",
-	      "      su -s /bin/bash jenkins -c \"/usr/bin/aws s3 sync ",
-                        "s3://dicelab-toolchain/jenkins-master/backups/JENKINS_HOME/ ",
-                        "/var/lib/jenkins\" || echo FAILED\n",
-	      "      \n",
-	      "      # Start Jenkins\n",
-	      "      systemctl enable jenkins\n",
-	      "      systemctl start jenkins\n",
-	      "      \n",
-	      "      # Install Jenkins backup cron-job\n",
+              "      \n",
+              "      # Install Jenkins\n",
+              "      yum install -y jenkins || error_exit 'Jenkins install failed'\n",
+              "      \n",
+              "      # Restore JENKINS_HOME content (if available)\n",
+              "      echo \"Restoring Jenkins from S3\"\n",
+              "      su -s /bin/bash jenkins -c \"/usr/bin/aws s3 sync s3://",
+                        { "Ref" : "BackupBucket" },
+                        "/",
+                        { "Ref" : "BackupFolder" },
+                        "/backups/sync/JENKINS_HOME/ /var/lib/jenkins\" || ",
+                        "echo \"Fresh Install: No restorable S3 content found.\"\n",
+              "      \n",
+              "      # Start Jenkins\n",
+              "      systemctl enable jenkins\n",
+              "      systemctl start jenkins\n",
+              "      \n",
+              "      # Install Jenkins backup cron-job\n",
               "      test -f /tmp/jenkins_cron && install -b -m 0600 -o ",
                        "jenkins -g jenkins /tmp/jenkins_cron ",
                        "/var/spool/cron/jenkins\n",
-              "      systemctl restart crond",
+              "      systemctl restart crond\n",
+              "      /opt/aws/bin/cfn-signal -e 0 --stack ",
+                        { "Ref" : "AWS::StackName" },
+                        " --resource CfnLaunchConfig --url ",
+                        { "Ref" : "CfnEndpointUrl" },
+                        "\n",
               ""
               ]
             ]
