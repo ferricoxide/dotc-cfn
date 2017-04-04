@@ -16,6 +16,11 @@
       ],
       "Default": "CentOS"
     },
+    "AdminPubkeyURL": {
+      "Description": "URL the file containing the admin users' SSH public keys.",
+      "Type": "String",
+      "AllowedPattern": "^$|^http://.*$|^https://.*$"
+    },
     "AppVolumeDevice": {
       "Description": "Device to mount an extra EBS volume. Leave blank to launch without an extra application volume",
       "Type": "String",
@@ -169,39 +174,6 @@
       "Default": "jenkins-master",
       "ConstraintDescription": "An alphanumeric string to complete the hostname portion of the instance's FQDN."
     },
-    "SubnetIds": {
-      "Type": "String",
-      "Description": "Subnet to associate to the Instance"
-    },
-    "SystemPrepBootstrapUrl": {
-      "Description": "URL to the SystemPrep Bootstrapper",
-      "Type": "String",
-      "Default": "https://s3.amazonaws.com/systemprep/BootStrapScripts/SystemPrep-Bootstrap--Linux.sh",
-      "AllowedPattern": "^http://.*\\.sh$|^https://.*\\.sh$"
-    },
-    "SystemPrepEnvironment": {
-      "Description": "Environment in which the instance is being deployed",
-      "Type": "String",
-      "Default": "false",
-      "AllowedValues": [
-        "false",
-        "dev",
-        "test",
-        "prod"
-      ]
-    },
-    "CfnEndpointUrl": {
-      "Description": "URL to the CloudFormation Endpoint. e.g. https://cloudformation.us-east-1.amazonaws.com",
-      "Type": "String",
-      "Default": "",
-      "AllowedPattern": "^$|^http://.*$|^https://.*$"
-    },
-    "CfnBootstrapUtilsUrl": {
-      "Description": "URL to aws-cfn-bootstrap-latest.tar.gz",
-      "Type": "String",
-      "Default": "https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz",
-      "AllowedPattern": "^http://.*\\tar\\.gz$|^https://.*\\.tar\\.gz$"
-    },
     "JenkinsRepoURL": {
       "Description": "URL to the Jenkins yum-repository",
       "Type": "String",
@@ -222,18 +194,6 @@
           "Fn::Equals": [
             {
               "Ref": "AppVolumeDevice"
-            },
-            ""
-          ]
-        }
-      ]
-    },
-    "UseCfnUrl": {
-      "Fn::Not": [
-        {
-          "Fn::Equals": [
-            {
-              "Ref": "CfnEndpointUrl"
             },
             ""
           ]
@@ -339,8 +299,7 @@
           "Parameters": [
             "NoPublicIp",
             "ServerHostname",
-            "DnsSuffix",
-            "SubnetIds"
+            "DnsSuffix"
           ]
         },
         {
@@ -358,18 +317,11 @@
             "default": "Miscellaneous Parameters"
           },
           "Parameters": [
+            "AdminPubkeyURL",
             "EpelRepo",
             "PipIndexFips",
             "PipRpm",
             "PyStache"
-          ]
-        },
-        {
-          "Label": {
-            "default": "CloudFormation Configuration"
-          },
-          "Parameters": [
-            "CfnEndpointUrl"
           ]
         }
       ],
@@ -396,97 +348,30 @@
   },
   "Resources": {
     "CfnLaunchConfig": {
-      "Type": "AWS::EC2::Instance",
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
       "Metadata" : {
         "AWS::CloudFormation::Init" : {
           "config" : {
             "files" : {
-              "/etc/cfn/cfn-hup.conf" : {
-                "content" : {
-                  "Fn::Join" : ["", [
-                    "[main]\n",
-                    "stack=", { "Ref" : "AWS::StackId" }, "\n",
-                    "region=", { "Ref" : "AWS::Region" }, "\n",
-                    {
-                      "Fn::If" : [
-                        "AssignInstanceRole", {
-                          "Fn::Join" : [ "", [
-                            "role=",
-                            { "Ref" : "InstanceRole" },
-                            "\n"
-                          ]]
-                        },
-                        ""
-                      ]
-                    },
-                    {
-                      "Fn::If" : [
-                        "AssignInstanceRole", {
-                          "Fn::Join" : [ "", [
-                            "url=",
-                            { "Ref" : "CfnEndpointUrl" },
-                            "\n"
-                          ]]
-                        },
-                        ""
-                      ]
-                    }
+              "/tmp/jenkins_cron" : {
+                "source" :  {
+                  "Fn::Join" : [ "", [
+                    { "Ref" : "BackupCronURL" }
                   ]]
                 },
                 "mode" : "000400",
                 "owner" : "root",
                 "group" : "root"
               },
-              "/etc/cfn/hooks.d/cfn-auto-reloader.conf" : {
-                "content" : {
-                  "Fn::Join" : ["", [
-                    "[cfn-auto-reloader-hook]\n",
-                    "triggers=post.update\n",
-                    "path=Resources.CfnLaunchConfig.Metadata\n",
-                    "action=/opt/aws/bin/cfn-init -v -c update",
-                    " --stack ", { "Ref" : "AWS::StackName" },
-                    " --resource CfnLaunchConfig",
-                    {
-                      "Fn::If" : [
-                        "AssignInstanceRole",
-                        {
-                          "Fn::Join" : [ "", [
-                            " --role ",
-                            { "Ref" : "InstanceRole" }
-                          ]]
-                        },
-                        ""
-                      ]
-                    },
-                    {
-                      "Fn::If" : [
-                        "UseCfnUrl",
-                        {
-                          "Fn::Join" : [ "", [
-                            " --url ",
-                            { "Ref" : "CfnEndpointUrl" }
-                          ]]
-                        },
-                        ""
-                      ]
-                    }
+              "/tmp/admin.keys" : {
+                "source" :  {
+                  "Fn::Join" : [ "", [
+                    { "Ref" : "AdminPubkeyURL" }
                   ]]
                 },
                 "mode" : "000400",
                 "owner" : "root",
                 "group" : "root"
-              }
-            },
-            "services" : {
-              "sysvinit" : {
-                "cfn-hup" : {
-                  "enabled" : "true",
-                  "ensureRunning" : "true",
-                  "files" : [
-                    "/etc/cfn/cfn-hup.conf",
-                    "/etc/cfn/hooks.d/cfn-auto-reloader.conf"
-                  ]
-                }
               }
             }
           },
@@ -499,19 +384,7 @@
           }
         }
       },
-      "CreationPolicy": {
-        "ResourceSignal": {
-          "Count": "1",
-          "Timeout": "PT30M"
-        }
-      },
       "Properties": {
-        "ImageId": {
-          "Ref": "AmiId"
-        },
-        "InstanceType": {
-          "Ref": "InstanceType"
-        },
         "IamInstanceProfile": {
           "Fn::If": [
             "AssignInstanceRole",
@@ -523,21 +396,13 @@
             }
           ]
         },
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": {
-              "Fn::Join": [
-                "",
-                [
-                  {
-                    "Ref": "AWS::StackName"
-                  }
-                ]
-              ]
-            }
-          }
-        ],
+        "ImageId": {
+          "Ref": "AmiId"
+        },
+        "InstanceMonitoring": "true",
+        "InstanceType": {
+          "Ref": "InstanceType"
+        },
         "BlockDeviceMappings": [
           {
             "DeviceName": {
@@ -585,27 +450,15 @@
             ]
           }
         ],
-        "KeyName": {
-          "Ref": "KeyPairName"
+        "KeyName": { "Ref": "KeyPairName" },
+        "AssociatePublicIpAddress": {
+          "Fn::If": [
+            "AssignPublicIp",
+            "true",
+            "false"
+          ]
         },
-        "NetworkInterfaces": [
-          {
-            "DeviceIndex": "0",
-            "AssociatePublicIpAddress": {
-              "Fn::If": [
-                "AssignPublicIp",
-                "true",
-                "false"
-              ]
-            },
-            "GroupSet": {
-              "Ref": "SecurityGroupIds"
-            },
-            "SubnetId": {
-              "Ref": "SubnetIds"
-            }
-          }
-        ],
+        "SecurityGroups" :{ "Ref": "SecurityGroupIds" },
         "UserData": {
           "Fn::Base64" : {
             "Fn::Join" : [ "", [
@@ -664,14 +517,25 @@
               "      \n",
               "      # Helper function\n",
               "      function error_exit {\n",
-              "         /opt/aws/bin/cfn-signal -e 1 --stack ",
-                           { "Ref" : "AWS::StackName" },
-                           " --resource CfnLaunchConfig\n",
+              "         echo \"${1}\"\n",
               "         exit 1\n",
               "      }\n",
               "      \n",
               "      # Temp-disable SELinux\n",
               "      setenforce 0 || error_exit 'Could not change SEL-mode'\n",
+              "      \n",
+              "      # Install administrator ssh public-keys\n",
+              "      curl -skL ",
+                        { "Ref" : "AdminPubkeyURL" },
+                        " -o /tmp/admin.keys || error_exit 'Could not download admin keys'\n",
+              "      install -b -m 0400 -o ",
+                        { "Ref" : "ProvisionUser" },
+                        " -g ",
+                        { "Ref" : "ProvisionUser" },
+                        " /tmp/admin.keys /home/",
+                        { "Ref" : "ProvisionUser" },
+                        "/.ssh/authorized_keys || ",
+                        "error_exit 'Could not install admin keys'\n",
               "      \n",
               "      # Try to get firewalld ready for commands\n",
               "      firewall-offline-cmd --enabled\n",
@@ -690,15 +554,6 @@
                         " ",
                         { "Ref" : "PipRpm" },
                         "|| error_exit 'Could not change install dependent RPMs.'\n",
-              "      \n",
-              "      # Initialize the Cfn subsystems\n",
-              "      /opt/aws/bin/cfn-init -s ",
-                        { "Ref" : "AWS::StackName" },
-                                 " -r CfnLaunchConfig ",
-                      " --region ",
-                         { "Ref" : "AWS::Region" },
-                         " && echo 'Successfully ran cfn-init'",
-                         " || error_exit 'Failed to run cfn-init' > /dev/stderr\n",
               "      \n",
               "      # Export cert bundle ENVs\n",
               "      export AWS_CA_BUNDLE=/etc/pki/tls/certs/ca-bundle.crt\n",
@@ -731,21 +586,11 @@
                         " -o /tmp/jenkins_cron || ",
                         "error_exit 'Could not download cron config'\n",
               "      install -b -m 0600 -o jenkins -g jenkins ",
-                       "/tmp/jenkins_cron /var/spool/cron/jenkins ||",
-                       "error_exit 'Could not inject cron config'\n",
-              "      echo jenkins >> /etc/cron.allow || ",
-                       "error_exit 'Could not add jenkins as an allowed cron-user'\n",
+                       "/tmp/jenkins_cron /var/spool/cron/jenkins\n",
               "      systemctl restart crond\n",
               "      \n",
               "      # Temp-disable SELinux\n",
               "      setenforce 1 || error_exit 'Could not change SEL-mode'\n",
-              "      \n",
-              "      # Signal Cfn that we're good\n",
-              "      /opt/aws/bin/cfn-signal -e 0 --stack ",
-                        { "Ref" : "AWS::StackName" },
-                        " --resource CfnLaunchConfig --url ",
-                        { "Ref" : "CfnEndpointUrl" },
-                        "\n",
               ""
               ]
             ]

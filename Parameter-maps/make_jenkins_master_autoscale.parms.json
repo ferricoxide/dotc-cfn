@@ -1,0 +1,106 @@
+[
+  {
+    "ParameterKey": "AdminPubkeyURL",
+    "ParameterValue": "__KEYSURL__"
+  },
+  {
+    "ParameterKey": "AmiDistro",
+    "ParameterValue": "CentOS"
+  },
+  {
+    "ParameterKey": "AmiId",
+    "ParameterValue": "__AMIID__"
+  },
+  {
+    "ParameterKey": "BackupBucket",
+    "ParameterValue": "__BUCKETNAME__"
+  },
+  {
+    "ParameterKey": "BackupCronURL",
+    "ParameterValue": "__CRONURL__"
+  },
+  {
+    "ParameterKey": "BackupFolder",
+    "ParameterValue": "__BUCKETFOLDER__"
+  },
+  {
+    "ParameterKey": "DnsSuffix",
+    "ParameterValue": "__DNSDOM__"
+  },
+  {
+    "ParameterKey": "InstanceRole",
+    "ParameterValue": "__INSTANCE__"
+  },
+  {
+    "ParameterKey": "KeyPairName",
+    "ParameterValue": "__KPNAME__"
+  },
+  {
+    "ParameterKey": "SecurityGroupIds",
+    "ParameterValue": "__SGIDS__"
+  },
+  {
+    "ParameterKey": "AppVolumeDevice",
+    "ParameterValue": "/dev/xvdf"
+  },
+  {
+    "ParameterKey": "AppVolumeMountPath",
+    "ParameterValue": "/var/lib/jenkins"
+  },
+  {
+    "ParameterKey": "AppVolumeSize",
+    "ParameterValue": "15"
+  },
+  {
+    "ParameterKey": "AppVolumeType",
+    "ParameterValue": "gp2"
+  },
+  {
+    "ParameterKey": "EpelRepo",
+    "ParameterValue": "epel"
+  },
+  {
+    "ParameterKey": "InstanceType",
+    "ParameterValue": "t2.micro"
+  },
+  {
+    "ParameterKey": "JenkinsRepoKeyURL",
+    "ParameterValue": "https://jenkins-ci.org/redhat/jenkins-ci.org.key"
+  },
+  {
+    "ParameterKey": "JenkinsRepoURL",
+    "ParameterValue": "http://pkg.jenkins.io/redhat"
+  },
+  {
+    "ParameterKey": "NoPublicIp",
+    "ParameterValue": "false"
+  },
+  {
+    "ParameterKey": "NoReboot",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "NoUpdates",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "PipIndexFips",
+    "ParameterValue": "https://pypi.org/simple/"
+  },
+  {
+    "ParameterKey": "PipRpm",
+    "ParameterValue": "python2-pip"
+  },
+  {
+    "ParameterKey": "ProvisionUser",
+    "ParameterValue": "builder"
+  },
+  {
+    "ParameterKey": "PyStache",
+    "ParameterValue": "pystache"
+  },
+  {
+    "ParameterKey": "ServerHostname",
+    "ParameterValue": "jenkins-master"
+  }
+]
