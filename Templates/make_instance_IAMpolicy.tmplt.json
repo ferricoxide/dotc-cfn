@@ -1,0 +1,122 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "This template sets up the IAM role needed by a GitLab instance",
+  "Parameters": {
+    "BackupBucket": {
+      "Description": "S3 Bucket to host backups of GitLab config-data",
+      "Type": "String",
+      "AllowedPattern": "^[a-z][a-z0-9-]*$"
+    },
+    "BackupFolder": {
+      "Description": "Folder in S3 Bucket to host backups of GitLab config-data",
+      "Type": "String",
+      "AllowedPattern": "^[a-z][a-z0-9-]*$"
+    },
+    "IamPolicyName": {
+      "Description": "Human-friendly name of the IAM policy",
+      "Type": "String",
+      "AllowedPattern": "^policy-[a-zA-Z0-9-]{6,30}$",
+      "ConstraintDescription": "Logical name for the policy. Name must be an alphanumeric string starting with 'policy-'."
+    },
+    "IamRoleName": {
+      "Description": "Human-friendly name of the IAM Instance-Role",
+      "Type": "String",
+      "AllowedPattern": "^INSTANCE-[a-zA-Z0-9-]{6,30}$",
+      "ConstraintDescription": "Logical name for the instance-role. Name must be an alphanumeric string starting with 'INSTANCE-'."
+    }
+  },
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Label": {
+            "default": "Policy Params"
+          },
+          "Parameters": [
+            "BackupBucket",
+            "BackupFolder",
+            "IamPolicyName",
+            "IamRoleName"
+          ]
+        }
+      ]
+    },
+    "AWS::CloudFormation::Designer": {
+      "c49ece7d-56d3-47af-a63e-6e00ea2cb068": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 60,
+          "y": 90
+        },
+        "z": 1,
+        "embeds": []
+      }
+    }
+  },
+  "Resources": {
+    "InstancePolicy" : {
+      "Type": "AWS::IAM::ManagedPolicy",
+      "Properties": {
+        "Description" : "Policy to provide instance-level access to needed AWS-level resources",
+        "Path" : "/",
+        "PolicyDocument": {
+          "Version" : "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "s3:Get*",
+                "s3:List*"
+              ],
+              "Resource": [
+                "Fn::Join" : [ "", [
+                  "arn:aws:s3:::",
+                    { "Ref" : "BackupBucket" }
+                ]],
+                "Fn::Join" : [ "", [
+                  "arn:aws:s3:::",
+                    { "Ref" : "BackupBucket" },
+                    "/*"
+                ]]
+              ]
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "s3:*"
+              ],
+              "Resource": [
+                "Fn::Join" : [ "", [
+                  "arn:aws:s3:::",
+                    { "Ref" : "BackupBucket" },
+                    "/",
+                    { "Ref" : "BackupFolder" }
+                ]],
+                "Fn::Join" : [ "", [
+                  "arn:aws:s3:::",
+                    { "Ref" : "BackupBucket" },
+                    "/",
+                    { "Ref" : "BackupFolder" },
+                    "/*"
+                ]]
+              ]
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "cloudformation:DescribeStackResource"
+              ],
+              "Resource": [
+                "*"
+              ]
+            }
+          ]
+        },
+        "Roles": [ { "Ref" : "IamRoleName" } ]
+      }
+    }
+  }
+}
