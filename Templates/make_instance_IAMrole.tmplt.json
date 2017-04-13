@@ -1,0 +1,59 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "This template sets up the IAM role needed by a GitLab instance",
+  "Parameters": {
+    "IamRoleName": {
+      "Description": "Human-friendly name of the IAM Instance-Role",
+      "Type": "String",
+      "AllowedPattern": "^INSTANCE-[a-zA-Z0-9-]{6,30}$",
+      "ConstraintDescription": "Logical name for the instance-role. Name must be an alphanumeric string starting with 'INSTANCE-'."
+    }
+  },
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Label": {
+            "default": "Policy Params"
+          },
+          "Parameters": [
+            "IamRoleName"
+          ]
+        }
+      ]
+    },
+    "AWS::CloudFormation::Designer": {
+      "c49ece7d-56d3-47af-a63e-6e00ea2cb068": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 60,
+          "y": 90
+        },
+        "z": 1,
+        "embeds": []
+      }
+    }
+  },
+  "Resources": {
+    "GitlabInstanceRole" : {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [ {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ec2.amazonaws.com"
+              }
+          } ]
+        },
+        "Path" : "/",
+        "RoleName": { "Ref" : "IamRoleName" }
+      }
+    }
+  }
+}
