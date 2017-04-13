@@ -11,6 +11,12 @@ GITLAB_DATABASE=${GITLAB_DATABASE:-UNDEF}
 GITLAB_DBUSER=${GITLAB_DBUSER:-UNDEF}
 GITLAB_PASSWORD=${GITLAB_PASSWORD:-UNDEF}
 GITLAB_DBHOST=${GITLAB_DBHOST:-UNDEF}
+GITLAB_AD_HOST=${GITLAB_AD_HOST:-UNDEF}
+GITLAB_AD_PORT=${GITLAB_AD_PORT:-UNDEF}
+GITLAB_AD_BINDCRYPT=${GITLAB_AD_BINDCRYPT:-UNDEF}
+GITLAB_AD_BINDUSER=${GITLAB_AD_BINDUSER:-UNDEF}
+GITLAB_AD_BINDPASS=${GITLAB_AD_BINDPASS:-UNDEF}
+GITLAB_AD_SRCHBASE=${GITLAB_AD_SRCHBASE:-UNDEF}
 
 
 #
@@ -24,13 +30,19 @@ function err_exit {
 
 
 #
-# Ensure we've passed an external URL
+# Ensure we've passed an necessary ENVs
 #####
 if [[ ${GITLAB_EXTERNURL} = UNDEF ]] ||
    [[ ${GITLAB_DATABASE} = UNDEF ]] ||
    [[ ${GITLAB_DBUSER} = UNDEF ]] ||
    [[ ${GITLAB_PASSWORD} = UNDEF ]] ||
-   [[ ${GITLAB_DBHOST} = UNDEF ]]
+   [[ ${GITLAB_DBHOST} = UNDEF ]] ||
+   [[ ${GITLAB_AD_HOST} = UNDEF ]] ||
+   [[ ${GITLAB_AD_PORT} = UNDEF ]] ||
+   [[ ${GITLAB_AD_BINDCRYPT} = UNDEF ]] ||
+   [[ ${GITLAB_AD_BINDUSER} = UNDEF ]] ||
+   [[ ${GITLAB_AD_BINDPASS} = UNDEF ]] ||
+   [[ ${GITLAB_AD_SRCHBASE} = UNDEF ]]
 then
    err_exit "Required env var(s) not defined. Aborting!"
 fi
@@ -67,6 +79,23 @@ gitlab_rails['db_database'] = "${GITLAB_DATABASE}"
 gitlab_rails['db_username'] = "${GITLAB_DBUSER}"
 gitlab_rails['db_password'] = "${GITLAB_PASSWORD}"
 gitlab_rails['db_host'] = "${GITLAB_DBHOST}"
+gitlab_rails['ldap_enabled'] = true
+gitlab_rails['ldap_servers'] = YAML.load <<-EOS
+main:
+  label: 'ActiveDirectory'
+  host: '${GITLAB_AD_HOST}'
+  port: ${GITLAB_AD_PORT}
+  method: '${GITLAB_AD_BINDCRYPT}'
+  bind_dn: '${GITLAB_AD_BINDUSER}'
+  password: '${GITLAB_AD_BINDPASS}'
+  timeout: 10
+  active_directory: true
+  uid: 'sAMAccountName'
+  allow_username_or_email_login: false
+  block_auto_created_users: false
+  base: '${GITLAB_AD_SRCHBASE}'
+  uid: 'sAMAccountName'
+EOS
 EOF
 
 if [[ $? -eq 0 ]]

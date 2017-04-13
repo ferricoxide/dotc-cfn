@@ -88,10 +88,6 @@
       "Type": "String",
       "AllowedPattern": "^http://.*\\.sh$|^https://.*\\.sh$"
     },
-    "KeyPairName": {
-      "Description": "Public/private key pairs allow you to securely connect to your instance after it launches",
-      "Type": "AWS::EC2::KeyPair::KeyName"
-    },
     "InstanceType": {
       "Description": "Amazon EC2 instance type",
       "Type": "String",
@@ -114,6 +110,43 @@
       "Description": "IAM instance role to apply to the instance(s)",
       "Type": "String",
       "Default": ""
+    },
+    "KeyPairName": {
+      "Description": "Public/private key pairs allow you to securely connect to your instance after it launches",
+      "Type": "AWS::EC2::KeyPair::KeyName"
+    },
+    "LdapHost": {
+      "Description": "FQDN of the LDAP host/Active Directory server.",
+      "Type": "String",
+      "AllowedPattern": "^[a-z0-9.-]*$"
+    },
+    "LdapPort": {
+      "Description": "TCP Port that the LDAP/AD service listens on.",
+      "Type": "String",
+      "Default": "389",
+      "AllowedPattern": "^[0-9]*$"
+    },
+    "LdapCrypt": {
+      "Description": "Encryption-method to use for securing the LDAP connection (\"plain\" is BASE64-encoded).",
+      "Type": "String",
+      "Default": "plain",
+      "AllowedValues": [
+        "plain",
+        "ssl",
+        "tls"
+      ]
+    },
+    "LdapProxyUser": {
+      "Description": "Name of the user that has directory-lookup privileges on the target directory service. Use DN or UPN format.",
+      "Type": "String"
+    },
+    "LdapUserPassword": {
+      "Description": "Password of the user that has directory-lookup privileges on the target directory service.",
+      "Type": "String"
+    },
+    "LdapSearchBase": {
+      "Description": "DN of the LDAP search-scope.",
+      "Type": "String"
     },
     "NoPublicIp": {
       "Description": "Controls whether to assign the instance a public IP. Recommended to leave at \"true\" _unless_ launching in a public subnet",
@@ -338,6 +371,19 @@
             "RdsDbInstance",
             "RdsDbAdmin",
             "RdsDbPasswd"
+          ]
+        },
+        {
+          "Label": {
+            "default": "Directory Service Parameters"
+          },
+          "Parameters": [
+            "LdapHost",
+            "LdapPort",
+            "LdapCrypt",
+            "LdapProxyUser",
+            "LdapUserPassword",
+            "LdapSearchBase"
           ]
         },
         {
@@ -630,6 +676,24 @@
                        "\n",
               "      export GITLAB_PASSWORD=",
                        { "Ref" : "RdsDbPasswd" },
+                       "\n",
+              "      export GITLAB_AD_HOST=",
+                       { "Ref" : "LdapHost" },
+                       "\n",
+              "      export GITLAB_AD_PORT=",
+                       { "Ref" : "LdapPort" },
+                       "\n",
+              "      export GITLAB_AD_BINDCRYPT=",
+                       { "Ref" : "LdapCrypt" },
+                       "\n",
+              "      export GITLAB_AD_BINDUSER=",
+                       { "Ref" : "LdapProxyUser" },
+                       "\n",
+              "      export GITLAB_AD_BINDPASS=",
+                       { "Ref" : "LdapUserPassword" },
+                       "\n",
+              "      export GITLAB_AD_SRCHBASE=",
+                       { "Ref" : "LdapSearchBase" },
                        "\n",
               "      \n",
               "      # Helper function\n",
