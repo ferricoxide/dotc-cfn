@@ -3,7 +3,7 @@
 # Script to configure the GitLab installation
 #
 #################################################################
-PROGNAME=$(basename ${0})
+PROGNAME=$(basename "${0}")
 GLCONFIG="/etc/gitlab/gitlab.rb"
 RUNDATE=$(date "+%Y%m%d%H%M")
 GITLAB_EXTERNURL=${GITLAB_EXTERNURL:-UNDEF}
@@ -24,7 +24,7 @@ GITLAB_AD_SRCHBASE=${GITLAB_AD_SRCHBASE:-UNDEF}
 #####
 function err_exit {
    echo "${1}" > /dev/stderr
-   logger -t ${PROGNAME} -p kern.crit "${1}"
+   logger -t "${PROGNAME}" -p kern.crit "${1}"
    exit 1
 }
 
@@ -51,11 +51,10 @@ fi
 #
 # Preserve the existing gitlab.rb file
 #####
-printf "Preserving ${GLCONFIG} as ${GLCONFIG}.bak-${RUNDATE}... "
-mv ${GLCONFIG} ${GLCONFIG}.bak-${RUNDATE} && \
-   echo "Success!" || \
+printf "Preserving %s as %s.bak-%s... " ${GLCONFIG} ${GLCONFIG} "${RUNDATE}"
+mv ${GLCONFIG} "${GLCONFIG}.bak-${RUNDATE}" || \
       err_exit "Failed to preserve ${GLCONFIG}: aborting"
-
+echo "Success!" 
 
 #
 # Localize the GitLab installation
@@ -65,7 +64,7 @@ printf "Localizing gitlab config files... "
 install -b -m 0600 /dev/null ${GLCONFIG} || \
    err_exit "Failed to create new/null config file"
 
-chcon --reference=${GLCONFIG}.bak-${RUNDATE} ${GLCONFIG} || \
+chcon "--reference=${GLCONFIG}.bak-${RUNDATE}" ${GLCONFIG} || \
    err_exit "Failed to set SELinx label on new/null config file"
 
 cat << EOF > ${GLCONFIG}
@@ -99,9 +98,10 @@ main:
 EOS
 EOF
 
+# shellcheck disable=SC2181
 if [[ $? -eq 0 ]]
 then
-   echo "Success!" 
+   echo "Success!"
 else
    err_exit "Failed to localize GitLab installation. Aborting!"
 fi
@@ -112,11 +112,11 @@ fi
 #####
 printf "###\n# Localizing GitLab service elements...\n###\n"
 export CHEF_FIPS=""
-gitlab-ctl reconfigure && \
-   echo "Localization successful." || \
-      err_exit "Localization did not succeed. Aborting."
+gitlab-ctl reconfigure || \
+    err_exit "Localization did not succeed. Aborting."
+echo "Localization successful."
 
 printf "###\n# Restarting GitLab to finalize settings...\n###\n"
-gitlab-ctl restart
-   echo "Restart successful." || \
+gitlab-ctl restart || \
       err_exit "Restart did not succeed. Check the logs."
+echo "Restart successful."
