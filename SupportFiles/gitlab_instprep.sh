@@ -1,10 +1,10 @@
 #!/bin/sh
 #
-# Script to handle preparation of the instance for installing 
+# Script to handle preparation of the instance for installing
 # and configuring GitLab
 #
 #################################################################
-PROGNAME=$(basename ${0})
+PROGNAME=$(basename "${0}")
 LOGFACIL="user.err"
 KERNVERS=$(uname -r)
 if [[ ${KERNVERS} == *el7* ]]
@@ -29,16 +29,17 @@ FWPORTS=(
 
 # Log failures and exit
 function error_exit {
-   echo "${$1}"
-   logger -t ${PROGNAME} -p ${LOGFACIL} "${1}"
+   echo "${1}"
+   logger -t "${PROGNAME}" -p ${LOGFACIL} "${1}"
    exit 1
 }
 
 # Open firewall ports
 function FwStuff {
    # Temp-disable SELinux (need when used in cloud-init context)
-   setenforce 0 && echo "Temp-disabled SELinux" || \
+   setenforce 0 || \
       error_exit "Failed to temp-disable SELinux"
+   echo "Temp-disabled SELinux"
 
    if [[ $(systemctl --quiet is-active firewalld)$? -eq 0 ]]
    then
@@ -48,10 +49,10 @@ function FwStuff {
       ${FWCMD} --enabled
    fi
 
-   for PORT in ${FWPORTS[@]}
+   for PORT in "${FWPORTS[@]}"
    do
-      printf "Add firewall exception for port ${PORT}... "
-      ${FWCMD} --permanent --add-port=${PORT}/tcp || \
+      printf "Add firewall exception for port %s... " "${PORT}"
+      ${FWCMD} --permanent "--add-port=${PORT}/tcp" || \
          error_exit "Failed to add port ${PORT} to firewalld"
    done
 
@@ -61,16 +62,16 @@ function FwStuff {
       error_exit "Failed to reload firewalld rules"
 
    # Restart SELinux
-   setenforce 1 && echo "Re-enabled SELinux" || \
+   setenforce 1 || \
       error_exit "Failed to reactivate SELinux"
-
+   echo "Re-enabled SELinux"
 }
 
 # Check if we're missing any vendor-enumerated RPMs
-for RPM in ${DEPRPMS[@]}
+for RPM in "${DEPRPMS[@]}"
 do
-   printf "Cheking for presence of ${RPM}... "
-   if [[ $(rpm --quiet -q $RPM)$? -eq 0 ]]
+   printf "Cheking for presence of %s... " "${RPM}"
+   if [[ $(rpm --quiet -q "$RPM")$? -eq 0 ]]
    then
       echo "Already installed."
    else
@@ -82,8 +83,8 @@ done
 # Install any missing vendor-enumerated RPMs
 if [[ ${#INSTRPMS[@]} -ne 0 ]]
 then
-   echo "Will attempt to install the following RPMS: ${INSTRPMS[@]}"
-   yum install -y ${INSTRPMS[@]} || \
+   echo "Will attempt to install the following RPMS: ${INSTRPMS[*]}"
+   yum install -y "${INSTRPMS[@]}" || \
       error_exit "Install of RPM-dependencies experienced failures"
 else
    echo "No RPM-dependencies to satisfy"
@@ -94,17 +95,17 @@ for MGSVC in sshd postfix
 do
    if [[ $(systemctl --quiet is-active ${MGSVC})$? -ne 0 ]]
    then
-      printf "Starting ${MGSVC}..."
-      systemctl start ${MGSVC} && \
-         echo "Success!" || \
+      printf "Starting %s..." ${MGSVC}
+      systemctl start ${MGSVC} || \
          error_exit "Failed to start ${MGSVC}!"
+      echo "Success!"
    fi
    if [[ $(systemctl --quiet is-enabled ${MGSVC})$? -ne 0 ]]
    then
-      printf "Enabling ${MGSVC}..."
-      systemctl enable ${MGSVC} && \
-         echo "Success!" || \
+      printf "Enabling %s..." ${MGSVC}
+      systemctl enable ${MGSVC} || \
          error_exit "Failed to enable ${MGSVC}!"
+      echo "Success!"
    fi
 done
 
@@ -112,44 +113,46 @@ done
 FwStuff
 
 # Install repo-def for repository hosting the GitLab RPM(s)
-curl -skL "${REPOSRC}" -o /etc/yum.repos.d/GitLab.repo && \
-  echo "Successfully installed repodef for GitLab CE" || \
-  error_exit "Failed to install repodef for GitLab CE"
+curl -skL "${REPOSRC}" -o /etc/yum.repos.d/GitLab.repo || \
+   error_exit "Failed to install repodef for GitLab CE"
+echo "Successfully installed repodef for GitLab CE"
 # Ensure SCL repositories are available
 RELEASE=$(rpm -qf /etc/redhat-release --qf '%{name}')
 if [[ $(yum repolist all | grep -q scl)$? -ne 0 ]]
 then
-   yum install -y ${RELEASE}-scl &&
-      echo "Successfully nstalled Software CoLlections repodefs" || \
+   yum install -y "${RELEASE}-scl" || \
       error_exit "Attempted install of Software CoLlections repodefs failed."
+   echo "Successfully nstalled Software CoLlections repodefs"
 fi
 
 # Install a Ruby version that is FIPS compatible
-yum --enablerepo=*scl* install -y rh-ruby23 && \
-   echo "Installed updated Ruby RPM" || \
+yum --enablerepo=*scl* install -y rh-ruby23 || \
    error_exit "Install of updated Ruby RPM failed."
+echo "Installed updated Ruby RPM"
 
 # Permanently eable the SCL version of Ruby
 cat << EOF > /etc/profile.d/scl-ruby.sh
 source /opt/rh/rh-ruby23/enable
-export X_SCLS="$(scl enable rh-ruby23 'echo $X_SCLS')"
+export X_SCLS="\$(scl enable rh-ruby23 'echo \$X_SCLS')"
 EOF
 
-source /etc/profile.d/scl-ruby.sh && \
-   echo "Reset Ruby-location to updated version" || \
+# shellcheck disable=SC1091
+source /etc/profile.d/scl-ruby.sh || \
    error_exit "Failed to reset Ruby-location to updated version"
+echo "Reset Ruby-location to updated version"
 
 # Disable Chef's FIPS stuff
 cat << EOF > /etc/profile.d/chef.sh
 export CHEF_FIPS=""
 EOF
 
-source /etc/profile.d/chef.sh && \
-   echo "Shut off FIPS-checking in embedded Chef Gem" || \
+# shellcheck disable=SC1091
+source /etc/profile.d/chef.sh || \
    error_exit "Failed to shut off FIPS-checking in embedded Chef Gem"
+echo "Shut off FIPS-checking in embedded Chef Gem"
 
 # Do base-install of GitLab RPM
 printf "Installing GitLab CE"
-yum install -y gitlab-ce && \
-   echo "Succeeded. Service must now be configured" || \
+yum install -y gitlab-ce || \
    error_exit "Install failed."
+echo "Install succeeded. Gitlab must now be configured"
