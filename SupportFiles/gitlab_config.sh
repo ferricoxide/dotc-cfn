@@ -73,6 +73,7 @@ external_url 'https://${GITLAB_EXTERNURL}'
 nginx['listen_addresses'] = ["0.0.0.0", "[::]"]
 nginx['listen_port'] = 80
 nginx['listen_https'] = false
+postgresql['enable'] = false
 gitlab_rails['db_adapter'] = "postgresql"
 gitlab_rails['db_encoding'] = "unicode"
 gitlab_rails['db_database'] = "${GITLAB_DATABASE}"
