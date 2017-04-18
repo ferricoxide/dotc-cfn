@@ -71,6 +71,11 @@
       "Type": "String",
       "ConstraintDescription": "An alphanumeric string to complete the domain portion of the instance's FQDN."
     },
+    "EfsHost": {
+      "Description" : "FQDN of EFS service hosting persistent GitLab data.",
+      "Type": "String",
+      "AllowedPattern": "^[a-z][a-z0-9.-]*$"
+    },
     "EpelRepo": {
       "Description" : "Name of network's EPEL repo.",
       "Type": "String",
@@ -262,6 +267,18 @@
         }
       ]
     },
+    "SetEfsHostEnv": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "EfsHost"
+            },
+            ""
+          ]
+        }
+      ]
+    },
     "UseCfnUrl": {
       "Fn::Not": [
         {
@@ -392,6 +409,7 @@
           },
           "Parameters": [
             "AdminPubkeyURL",
+            "EfsHost",
             "EpelRepo",
             "GitLabPrepScript",
             "GitLabConfScript",
@@ -695,6 +713,20 @@
               "      export GITLAB_AD_SRCHBASE=",
                        { "Ref" : "LdapSearchBase" },
                        "\n",
+              {
+                "Fn::If" : [
+                  "SetEfsHostEnv",
+                  {
+                    "Fn::Join" : [ "", [
+                      "      ",
+                      "export GITLAB_EFS_HOST=",
+                        { "Ref" : "EfsHost" },
+                        "\n"
+                    ]]
+                  },
+                  "",
+                ]
+              },
               "      \n",
               "      # Helper function\n",
               "      function error_exit {\n",
