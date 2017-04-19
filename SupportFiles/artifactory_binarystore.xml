@@ -1,0 +1,40 @@
+<!-- S3 chain template structure  --> 
+<config version="v1">  
+	<!-- Define flow of binary-data from cache to S3 -->
+	<chain>
+		<provider id="cache-fs" type="cache-fs">		<!--It first tries to read from the cache -->
+			<provider id="eventual" type="eventual">	<!--It is eventually persistent so writes are also written directly to persistent storage -->
+				<provider id="retry" type="retry">		<!-- If a read or write fails, retry -->
+					<provider id="s3" type="s3"/>		<!-- Actual storage is S3 -->
+				</provider>
+			</provider>
+		</provider>
+	</chain>
+	
+	<--!
+		Pull max cache size from template
+		Pull caching-dir from template
+	-->
+	<provider id="cache-fs" type="cache-fs">       
+		<maxCacheSize>5000000000</maxCacheSize>						<!-- 5GB cache-size -->
+        <cacheProviderDir>/var/cache/artifactory</cacheProviderDir>	<!-- Caching location >
+	</provider>
+	
+	<provider id="eventual" type="eventual">
+		<numberOfThreads>20</numberOfThreads>			<!-- The maximum number of threads for parallel upload of files -->
+	</provider>
+	
+	<provider id="retry" type="retry">
+		<maxTrys>10</maxTrys>							<!-- Try any read or write a maximum of 10 times -->                                            
+	</provider>
+	
+	<!--
+		roleName, endpoint and bucketName should all be pulled from template
+	-->
+	<provider id="s3" type="s3">
+		<roleName>INSTANCE-rolename</roleName>
+		<endpoint>s3.amazonaws.com</endpoint> 
+		<bucketName>bucket_name</bucketName>                                
+		<refreshCredentials>true</refreshCredentials>
+	</provider>
+</config>
